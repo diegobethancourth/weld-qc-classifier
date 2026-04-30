@@ -2,618 +2,185 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weld QC Classifier</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8C1D40">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Weld QC">
+<meta name="description" content="AI-powered weld quality classifier – ASU MFG 598">
+<link rel="manifest" href="./manifest.json">
+<title>Weld QC Classifier – ASU MFG 598</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
-
   :root {
-    --bg: #0a0c0f;
-    --surface: #111418;
-    --border: #1e2530;
-    --accent-pass: #00e5a0;
-    --accent-fail: #ff3b5c;
-    --accent-neutral: #4a9eff;
-    --text: #e8edf5;
-    --text-dim: #5a6478;
-    --mono: 'Share Tech Mono', monospace;
-    --display: 'Barlow Condensed', sans-serif;
+    --asu-maroon:#8C1D40;--asu-dark:#6b1530;--asu-light:rgba(140,29,64,0.15);
+    --asu-gold:#FFC627;--asu-gold-dim:rgba(255,198,39,0.12);
+    --bg:#0a0306;--surface:#110408;--border:#2a0e1a;
+    --text:#f0e8eb;--text-dim:#7a5060;
+    --pass:#00d48a;--fail:#ff3b5c;
+    --mono:'Share Tech Mono',monospace;--display:'Barlow Condensed',sans-serif;
   }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;min-height:100dvh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(140,29,64,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(140,29,64,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--display);
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(74,158,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(74,158,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Glow blobs */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -200px;
-    right: -200px;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(74,158,255,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 24px 80px;
-    position: relative;
-    z-index: 1;
-  }
+  /* Top stripe */
+  .topbar{height:5px;background:linear-gradient(90deg,var(--asu-maroon) 60%,var(--asu-gold) 100%)}
 
   /* Header */
-  header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 56px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo-area h1 {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 48px;
-    letter-spacing: -1px;
-    line-height: 1;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-
-  .logo-area h1 span {
-    color: var(--accent-neutral);
-  }
-
-  .logo-area p {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 8px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .model-badge {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent-neutral);
-    border: 1px solid rgba(74,158,255,0.3);
-    padding: 6px 12px;
-    letter-spacing: 1px;
-    background: rgba(74,158,255,0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-  }
-
-  .model-badge .status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-
-  .dot.loading { background: #ffaa00; animation: pulse 1s infinite; }
-  .dot.ready { background: var(--accent-pass); }
-  .dot.error { background: var(--accent-fail); }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* Main layout */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 24px;
-    position: relative;
-  }
-
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .panel-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* Upload zone */
-  .upload-zone {
-    border: 1px dashed var(--border);
-    aspect-ratio: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-    background: rgba(74,158,255,0.02);
-  }
-
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--accent-neutral);
-    background: rgba(74,158,255,0.05);
-  }
-
-  .upload-zone input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .upload-icon {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 16px;
-    opacity: 0.3;
-  }
-
-  .upload-text {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 14px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
-  .upload-sub {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 6px;
-    opacity: 0.5;
-  }
-
-  .preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    inset: 0;
-    display: none;
-  }
-
-  .preview-img.visible { display: block; }
-
-  /* Result panel */
-  .result-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .verdict-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 0;
-    position: relative;
-  }
-
-  .verdict-idle {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-align: center;
-  }
-
-  .verdict-idle svg {
-    display: block;
-    margin: 0 auto 16px;
-    opacity: 0.15;
-  }
-
-  .verdict {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .verdict.visible { display: flex; }
-
-  .verdict-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    color: var(--text-dim);
-  }
-
-  .verdict-result {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 72px;
-    line-height: 1;
-    letter-spacing: -2px;
-    text-transform: uppercase;
-    animation: fadeInUp 0.4s ease;
-  }
-
-  .verdict-result.pass { color: var(--accent-pass); }
-  .verdict-result.fail { color: var(--accent-fail); }
-
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .verdict-icon {
-    font-size: 48px;
-    margin-bottom: 8px;
-    animation: fadeInUp 0.3s ease;
-  }
-
-  /* Confidence bar */
-  .confidence-section {
-    margin-top: 20px;
-    width: 100%;
-  }
-
-  .conf-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .conf-track {
-    height: 4px;
-    background: var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .conf-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .conf-fill.pass { background: var(--accent-pass); }
-  .conf-fill.fail { background: var(--accent-fail); }
-
-  /* Probability bars */
-  .prob-section {
-    margin-top: 16px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .prob-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .prob-name {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    width: 36px;
-    text-transform: uppercase;
-  }
-
-  .prob-bar-track {
-    flex: 1;
-    height: 3px;
-    background: var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .prob-bar-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.6s ease 0.2s;
-  }
-
-  .prob-bar-fill.pass { background: var(--accent-pass); }
-  .prob-bar-fill.fail { background: var(--accent-fail); }
-
-  .prob-pct {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    width: 36px;
-    text-align: right;
-  }
-
-  /* Analyze button */
-  .analyze-btn {
-    width: 100%;
-    padding: 16px;
-    background: transparent;
-    border: 1px solid var(--accent-neutral);
-    color: var(--accent-neutral);
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .analyze-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--accent-neutral);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 0;
-  }
-
-  .analyze-btn:hover::before { transform: translateX(0); }
-  .analyze-btn:hover { color: var(--bg); }
-  .analyze-btn span { position: relative; z-index: 1; }
-
-  .analyze-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    border-color: var(--text-dim);
-    color: var(--text-dim);
-  }
-
-  .analyze-btn:disabled::before { display: none; }
-
-  /* Analyzing animation */
-  .analyzing-overlay {
-    position: absolute;
-    inset: 0;
-    background: var(--surface);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    z-index: 10;
-  }
-
-  .analyzing-overlay.active { display: flex; }
-
-  .scan-line {
-    width: 60px;
-    height: 2px;
-    background: var(--accent-neutral);
-    animation: scan 1.2s ease-in-out infinite alternate;
-    box-shadow: 0 0 12px var(--accent-neutral);
-  }
-
-  @keyframes scan {
-    from { transform: translateX(-40px); opacity: 0.4; }
-    to { transform: translateX(40px); opacity: 1; }
-  }
-
-  .analyzing-text {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent-neutral);
-    letter-spacing: 3px;
-    animation: blink 1s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* Info section */
-  .info-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 20px 24px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-  }
-
-  .info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .info-key {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .info-val {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 20px;
-    color: var(--text);
-    letter-spacing: -0.5px;
-  }
-
-  .info-val.green { color: var(--accent-pass); }
-
-  /* Error message */
-  .error-msg {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent-fail);
-    padding: 12px;
-    border: 1px solid rgba(255,59,92,0.3);
-    background: rgba(255,59,92,0.05);
-    display: none;
-    margin-top: 12px;
-    letter-spacing: 1px;
-  }
-
-  .error-msg.visible { display: block; }
-
-  /* Loading model state */
-  .loading-model {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-    z-index: 100;
-    transition: opacity 0.5s ease;
-  }
-
-  .loading-model.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .loading-title {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 32px;
-    letter-spacing: -1px;
-    text-transform: uppercase;
-  }
-
-  .loading-bar-track {
-    width: 300px;
-    height: 2px;
-    background: var(--border);
-  }
-
-  .loading-bar-fill {
-    height: 100%;
-    background: var(--accent-neutral);
-    width: 0%;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 8px var(--accent-neutral);
-  }
-
-  .loading-sub {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-  }
-
-  /* Reset link */
-  .reset-btn {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px 0;
-    text-decoration: underline;
-    transition: color 0.2s;
-    display: block;
-    margin: 8px auto 0;
-  }
-
-  .reset-btn:hover { color: var(--text); }
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
+  .logo-area{display:flex;align-items:center;gap:14px}
+  .asu-logo{height:42px;width:auto;object-fit:contain}
+  .title-stack h1{font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:-.5px;line-height:1;text-transform:uppercase}
+  .title-stack h1 span{color:var(--asu-gold)}
+  .title-stack p{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px;letter-spacing:2px;text-transform:uppercase}
+  .model-badge{font-family:var(--mono);font-size:9px;color:var(--asu-gold);border:1px solid rgba(255,198,39,0.25);padding:5px 10px;background:var(--asu-gold-dim);display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .status-row{display:flex;align-items:center;gap:5px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);flex-shrink:0}
+  .dot.loading{background:var(--asu-gold);animation:pulse 1s infinite}
+  .dot.ready{background:var(--pass)}
+  .dot.error{background:var(--fail)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Install banner */
+  .install-banner{background:linear-gradient(135deg,var(--asu-maroon),var(--asu-dark));border-bottom:1px solid rgba(255,198,39,.2);padding:10px 20px;display:none;align-items:center;justify-content:space-between;gap:10px}
+  .install-banner.visible{display:flex}
+  .install-text{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:1px;color:var(--text)}
+  .install-btn{background:var(--asu-gold);color:var(--asu-dark);border:none;padding:8px 18px;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity .2s;flex-shrink:0}
+  .install-btn:hover{opacity:.85}
+  .install-dismiss{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:0 4px}
+
+  /* Layout */
+  .container{max-width:920px;margin:0 auto;padding:24px 18px 80px;position:relative;z-index:1}
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  @media(max-width:620px){.main-grid{grid-template-columns:1fr}}
+
+  /* Panels */
+  .panel{background:var(--surface);border:1px solid var(--border);padding:18px;position:relative}
+  .panel-label{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .panel-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* Upload */
+  .upload-zone{border:1px dashed var(--border);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;background:rgba(140,29,64,.03)}
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--asu-maroon);background:var(--asu-light)}
+  .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+  .upload-icon{width:40px;height:40px;margin-bottom:12px;opacity:.18}
+  .upload-text{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);text-align:center}
+  .upload-sub{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:4px;opacity:.5;text-align:center}
+  .preview-img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none}
+  .preview-img.visible{display:block}
+
+  /* Result */
+  .result-panel{display:flex;flex-direction:column}
+  .verdict-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 0;position:relative;min-height:180px}
+  .verdict-idle{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;text-align:center}
+  .verdict-idle svg{display:block;margin:0 auto 12px;opacity:.1}
+  .verdict{display:none;flex-direction:column;align-items:center;width:100%}
+  .verdict.visible{display:flex;animation:fadeInUp .4s ease}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .verdict-label{font-family:var(--mono);font-size:8px;letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;color:var(--text-dim)}
+  .verdict-result{font-family:var(--display);font-weight:900;font-size:76px;line-height:1;letter-spacing:-2px;text-transform:uppercase}
+  .verdict-result.pass{color:var(--pass)}
+  .verdict-result.fail{color:var(--fail)}
+  .verdict-icon{font-size:36px;margin-bottom:4px}
+  .confidence-section{margin-top:16px;width:100%}
+  .conf-label{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;display:flex;justify-content:space-between}
+  .conf-track{height:3px;background:var(--border);overflow:hidden}
+  .conf-fill{height:100%;width:0%;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+  .conf-fill.pass{background:var(--pass)}.conf-fill.fail{background:var(--fail)}
+  .prob-section{margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px}
+  .prob-row{display:flex;align-items:center;gap:8px}
+  .prob-name{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;width:30px;text-transform:uppercase}
+  .prob-bar-track{flex:1;height:3px;background:var(--border);overflow:hidden}
+  .prob-bar-fill{height:100%;width:0%;transition:width .6s ease .2s}
+  .prob-bar-fill.pass{background:var(--pass)}.prob-bar-fill.fail{background:var(--fail)}
+  .prob-pct{font-family:var(--mono);font-size:8px;color:var(--text-dim);width:28px;text-align:right}
+
+  /* Buttons */
+  .btn-group{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .analyze-btn{width:100%;padding:18px;background:transparent;border:1px solid var(--asu-maroon);color:var(--text);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;-webkit-appearance:none}
+  .analyze-btn::before{content:'';position:absolute;inset:0;background:var(--asu-maroon);transform:translateX(-100%);transition:transform .3s ease;z-index:0}
+  .analyze-btn:not(:disabled):hover::before{transform:translateX(0)}
+  .analyze-btn span{position:relative;z-index:1}
+  .analyze-btn:disabled{opacity:.3;cursor:not-allowed;border-color:var(--text-dim)}
+  .analyze-btn:disabled::before{display:none}
+
+  /* BIG reset */
+  .reset-btn{width:100%;padding:16px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:none;-webkit-appearance:none}
+  .reset-btn:hover{border-color:var(--asu-gold);color:var(--asu-gold)}
+
+  /* Analyzing */
+  .analyzing-overlay{position:absolute;inset:0;background:var(--surface);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:10}
+  .analyzing-overlay.active{display:flex}
+  .scan-line{width:60px;height:2px;background:var(--asu-gold);animation:scan 1.2s ease-in-out infinite alternate;box-shadow:0 0 10px var(--asu-gold)}
+  @keyframes scan{from{transform:translateX(-40px);opacity:.4}to{transform:translateX(40px);opacity:1}}
+  .analyzing-text{font-family:var(--mono);font-size:10px;color:var(--asu-gold);letter-spacing:3px;animation:blink 1s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* Info bar */
+  .info-panel{background:var(--surface);border:1px solid var(--border);padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:480px){.info-panel{grid-template-columns:repeat(2,1fr)}}
+  .info-item{display:flex;flex-direction:column;gap:2px}
+  .info-key{font-family:var(--mono);font-size:7px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+  .info-val{font-family:var(--display);font-weight:700;font-size:19px;color:var(--text);letter-spacing:-.5px}
+  .info-val.gold{color:var(--asu-gold)}
+
+  /* Error */
+  .error-msg{font-family:var(--mono);font-size:9px;color:var(--fail);padding:9px;border:1px solid rgba(255,59,92,.3);background:rgba(255,59,92,.05);display:none;margin-top:8px;letter-spacing:1px}
+  .error-msg.visible{display:block}
+
+  /* Loading screen */
+  .loading-model{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;z-index:100;transition:opacity .5s ease}
+  .loading-model.hidden{opacity:0;pointer-events:none}
+  .loading-logo{height:54px;object-fit:contain;margin-bottom:4px}
+  .loading-title{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:-1px;text-transform:uppercase;text-align:center}
+  .loading-title span{color:var(--asu-gold)}
+  .loading-bar-track{width:240px;height:2px;background:var(--border)}
+  .loading-bar-fill{height:100%;background:var(--asu-maroon);width:0%;transition:width .3s ease;box-shadow:0 0 8px var(--asu-maroon)}
+  .loading-sub{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px}
+
+  /* Footer */
+  footer{text-align:center;padding:14px;font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:2px;border-top:1px solid var(--border);margin-top:16px}
+  footer span{color:var(--asu-maroon)}
 </style>
 </head>
 <body>
 
-<!-- Loading overlay -->
 <div class="loading-model" id="loadingScreen">
-  <div class="loading-title">Loading <span style="color:var(--accent-neutral)">Model</span></div>
+  <img class="loading-logo" src="./ASU LOGO/ASU LOGO.png" alt="ASU" onerror="this.style.display='none'">
+  <div class="loading-title">Loading <span>Model</span></div>
   <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingBar"></div></div>
   <div class="loading-sub" id="loadingStatus">INITIALIZING...</div>
 </div>
 
-<div class="container">
-  <header>
-    <div class="logo-area">
+<div class="install-banner" id="installBanner">
+  <div class="install-text">📱 Install Weld QC as an app on your device</div>
+  <button class="install-btn" id="installBtn">Install</button>
+  <button class="install-dismiss" id="installDismiss">✕</button>
+</div>
+
+<div class="topbar"></div>
+
+<header>
+  <div class="logo-area">
+    <img class="asu-logo" src="./ASU LOGO/ASU LOGO.png" alt="ASU" onerror="this.style.display='none'">
+    <div class="title-stack">
       <h1>Weld <span>QC</span></h1>
       <p>MFG 598 · Weld Image Classification · ASU</p>
     </div>
-    <div class="model-badge">
-      <div>CNN 224×224 · Binary Classifier</div>
-      <div class="status">
-        <div class="dot loading" id="statusDot"></div>
-        <span id="statusText">LOADING MODEL</span>
-      </div>
+  </div>
+  <div class="model-badge">
+    <div>CNN 224×224 · Binary Classifier</div>
+    <div class="status-row">
+      <div class="dot loading" id="statusDot"></div>
+      <span id="statusText">LOADING MODEL</span>
     </div>
-  </header>
+  </div>
+</header>
 
+<div class="container">
   <div class="main-grid">
-    <!-- Upload panel -->
     <div class="panel">
       <div class="panel-label">Input Image</div>
       <div class="upload-zone" id="uploadZone">
@@ -625,274 +192,182 @@
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <div class="upload-text">Drop weld image here</div>
-        <div class="upload-sub">or click to browse · JPG, PNG, BMP</div>
+        <div class="upload-sub">or tap to browse · JPG PNG BMP</div>
       </div>
       <div class="error-msg" id="errorMsg"></div>
     </div>
 
-    <!-- Result panel -->
     <div class="panel result-panel">
       <div class="panel-label">Classification Result</div>
-
       <div class="verdict-area">
-        <!-- Analyzing overlay -->
         <div class="analyzing-overlay" id="analyzingOverlay">
           <div class="scan-line"></div>
           <div class="analyzing-text">ANALYZING...</div>
         </div>
-
-        <!-- Idle state -->
         <div class="verdict-idle" id="idleState">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           AWAITING IMAGE
         </div>
-
-        <!-- Result -->
         <div class="verdict" id="verdictArea">
           <div class="verdict-icon" id="verdictIcon"></div>
           <div class="verdict-label">Classification</div>
           <div class="verdict-result" id="verdictResult">—</div>
-
           <div class="confidence-section">
-            <div class="conf-label">
-              <span>CONFIDENCE</span>
-              <span id="confPct">—</span>
-            </div>
-            <div class="conf-track">
-              <div class="conf-fill" id="confFill"></div>
-            </div>
+            <div class="conf-label"><span>CONFIDENCE</span><span id="confPct">—</span></div>
+            <div class="conf-track"><div class="conf-fill" id="confFill"></div></div>
           </div>
-
           <div class="prob-section">
             <div class="prob-row">
               <div class="prob-name">PASS</div>
-              <div class="prob-bar-track">
-                <div class="prob-bar-fill pass" id="passBar"></div>
-              </div>
+              <div class="prob-bar-track"><div class="prob-bar-fill pass" id="passBar"></div></div>
               <div class="prob-pct" id="passPct">—</div>
             </div>
             <div class="prob-row">
               <div class="prob-name">FAIL</div>
-              <div class="prob-bar-track">
-                <div class="prob-bar-fill fail" id="failBar"></div>
-              </div>
+              <div class="prob-bar-track"><div class="prob-bar-fill fail" id="failBar"></div></div>
               <div class="prob-pct" id="failPct">—</div>
             </div>
           </div>
         </div>
       </div>
-
-      <div>
+      <div class="btn-group">
         <button class="analyze-btn" id="analyzeBtn" disabled>
           <span id="analyzeBtnText">Load an image to analyze</span>
         </button>
-        <button class="reset-btn" id="resetBtn" style="display:none">Reset</button>
+        <button class="reset-btn" id="resetBtn">↺ Reset</button>
       </div>
     </div>
   </div>
 
-  <!-- Info bar -->
   <div class="info-panel">
-    <div class="info-item">
-      <div class="info-key">Architecture</div>
-      <div class="info-val">CNN</div>
-    </div>
-    <div class="info-item">
-      <div class="info-key">Input Size</div>
-      <div class="info-val">224×224</div>
-    </div>
-    <div class="info-item">
-      <div class="info-key">Accuracy</div>
-      <div class="info-val green">97%</div>
-    </div>
-    <div class="info-item">
-      <div class="info-key">Classes</div>
-      <div class="info-val">Pass / Fail</div>
-    </div>
+    <div class="info-item"><div class="info-key">Architecture</div><div class="info-val">CNN</div></div>
+    <div class="info-item"><div class="info-key">Input Size</div><div class="info-val">224×224</div></div>
+    <div class="info-item"><div class="info-key">Accuracy</div><div class="info-val gold">97%</div></div>
+    <div class="info-item"><div class="info-key">Classes</div><div class="info-val">Pass / Fail</div></div>
   </div>
+
+  <footer>
+    <span>Arizona State University</span> · MFG 598 · Diego Bethancourth &amp; Xavier Hebol D Cruze · Spring 2026
+  </footer>
 </div>
 
 <script>
-  let model = null;
-  let imageLoaded = false;
+  // PWA
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installBanner').classList.add('visible');
+  });
+  document.getElementById('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('installBanner').classList.remove('visible');
+  });
+  document.getElementById('installDismiss').addEventListener('click', () =>
+    document.getElementById('installBanner').classList.remove('visible'));
+  window.addEventListener('appinstalled', () =>
+    document.getElementById('installBanner').classList.remove('visible'));
 
-  // ── Model Loading ──────────────────────────────────────────
+  // Model
+  let model = null, imageLoaded = false;
   async function loadModel() {
     const bar = document.getElementById('loadingBar');
     const status = document.getElementById('loadingStatus');
-
-    // Simulate progress while loading
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress = Math.min(progress + Math.random() * 8, 85);
-      bar.style.width = progress + '%';
-    }, 200);
-
+    let p = 0;
+    const iv = setInterval(() => { p = Math.min(p + Math.random()*7, 85); bar.style.width = p+'%'; }, 200);
     try {
       status.textContent = 'LOADING WEIGHTS...';
-
-      // Load from same directory as HTML — model files must be co-located
       model = await tf.loadLayersModel('./model.json');
-
-      clearInterval(interval);
-      bar.style.width = '100%';
-      status.textContent = 'MODEL READY';
-
+      clearInterval(iv); bar.style.width='100%'; bar.style.background='var(--pass)';
+      status.textContent='MODEL READY';
       setTimeout(() => {
         document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('statusDot').className = 'dot ready';
-        document.getElementById('statusText').textContent = 'MODEL READY';
+        document.getElementById('statusDot').className='dot ready';
+        document.getElementById('statusText').textContent='MODEL READY';
       }, 500);
-
-    } catch (err) {
-      clearInterval(interval);
-      status.textContent = 'ERROR: ' + err.message;
-      document.getElementById('statusDot').className = 'dot error';
-      document.getElementById('statusText').textContent = 'LOAD FAILED';
-      bar.style.background = 'var(--accent-fail)';
-      console.error('Model load error:', err);
+    } catch(err) {
+      clearInterval(iv); bar.style.background='var(--fail)';
+      status.textContent='ERROR: '+err.message;
+      document.getElementById('statusDot').className='dot error';
+      document.getElementById('statusText').textContent='LOAD FAILED';
     }
   }
 
-  // ── File Upload ────────────────────────────────────────────
-  const fileInput = document.getElementById('fileInput');
-  const uploadZone = document.getElementById('uploadZone');
-  const previewImg = document.getElementById('previewImg');
-  const analyzeBtn = document.getElementById('analyzeBtn');
+  // Upload
+  const fileInput=document.getElementById('fileInput');
+  const uploadZone=document.getElementById('uploadZone');
+  const previewImg=document.getElementById('previewImg');
+  const analyzeBtn=document.getElementById('analyzeBtn');
 
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files[0]) handleFile(e.target.files[0]);
-  });
-
-  uploadZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-
-  uploadZone.addEventListener('dragleave', () => {
-    uploadZone.classList.remove('drag-over');
-  });
-
-  uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) handleFile(file);
-  });
+  fileInput.addEventListener('change',(e)=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+  uploadZone.addEventListener('dragover',(e)=>{ e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop',(e)=>{ e.preventDefault(); uploadZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')) handleFile(f); });
 
   function handleFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImg.src = e.target.result;
-      previewImg.classList.add('visible');
-      imageLoaded = true;
-
-      // Reset results
-      document.getElementById('idleState').style.display = 'none';
+    const reader=new FileReader();
+    reader.onload=(e)=>{
+      previewImg.src=e.target.result; previewImg.classList.add('visible'); imageLoaded=true;
+      document.getElementById('idleState').style.display='none';
       document.getElementById('verdictArea').classList.remove('visible');
       document.getElementById('errorMsg').classList.remove('visible');
-      document.getElementById('resetBtn').style.display = 'none';
-
-      analyzeBtn.disabled = !model;
-      document.getElementById('analyzeBtnText').textContent = 'Analyze Weld';
+      document.getElementById('resetBtn').style.display='none';
+      analyzeBtn.disabled=!model;
+      document.getElementById('analyzeBtnText').textContent='Analyze Weld';
     };
     reader.readAsDataURL(file);
   }
 
-  // ── Classify ───────────────────────────────────────────────
+  // Classify
   analyzeBtn.addEventListener('click', async () => {
-    if (!model || !imageLoaded) return;
-
-    analyzeBtn.disabled = true;
+    if (!model||!imageLoaded) return;
+    analyzeBtn.disabled=true;
     document.getElementById('analyzingOverlay').classList.add('active');
     document.getElementById('verdictArea').classList.remove('visible');
-
-    // Small delay for UX
-    await new Promise(r => setTimeout(r, 800));
-
+    await new Promise(r=>setTimeout(r,800));
     try {
-      const img = previewImg;
-      const tensor = tf.browser.fromPixels(img, 1) // grayscale
-        .resizeBilinear([224, 224])
-        .toFloat()
-        .div(255.0)
-        .expandDims(0); // [1, 224, 224, 1]
-
-      const prediction = await model.predict(tensor).data();
-      tensor.dispose();
-
-      const failProb = prediction[0];
-      const passProb = 1 - failProb;
-      const isPass = failProb < 0.5;
-      const confidence = isPass ? passProb : failProb;
-
-      // Update UI
+      const tensor=tf.browser.fromPixels(previewImg,1).resizeBilinear([224,224]).toFloat().div(255.0).expandDims(0);
+      const pred=await model.predict(tensor).data(); tensor.dispose();
+      const failProb=pred[0], passProb=1-failProb, isPass=failProb<0.5, conf=isPass?passProb:failProb;
       document.getElementById('analyzingOverlay').classList.remove('active');
       document.getElementById('verdictArea').classList.add('visible');
-
-      const result = document.getElementById('verdictResult');
-      const icon = document.getElementById('verdictIcon');
-      const confFill = document.getElementById('confFill');
-
-      if (isPass) {
-        result.textContent = 'PASS';
-        result.className = 'verdict-result pass';
-        icon.textContent = '✓';
-        confFill.className = 'conf-fill pass';
-      } else {
-        result.textContent = 'FAIL';
-        result.className = 'verdict-result fail';
-        icon.textContent = '✕';
-        confFill.className = 'conf-fill fail';
-      }
-
-      const confPct = Math.round(confidence * 100);
-      document.getElementById('confPct').textContent = confPct + '%';
-      confFill.style.width = confPct + '%';
-
-      document.getElementById('passPct').textContent = Math.round(passProb * 100) + '%';
-      document.getElementById('failPct').textContent = Math.round(failProb * 100) + '%';
-
-      setTimeout(() => {
-        document.getElementById('passBar').style.width = Math.round(passProb * 100) + '%';
-        document.getElementById('failBar').style.width = Math.round(failProb * 100) + '%';
-      }, 100);
-
-      document.getElementById('resetBtn').style.display = 'block';
-      analyzeBtn.disabled = false;
-      document.getElementById('analyzeBtnText').textContent = 'Analyze Again';
-
-    } catch (err) {
+      const result=document.getElementById('verdictResult');
+      const icon=document.getElementById('verdictIcon');
+      const fill=document.getElementById('confFill');
+      if (isPass) { result.textContent='PASS'; result.className='verdict-result pass'; icon.textContent='✓'; fill.className='conf-fill pass'; }
+      else { result.textContent='FAIL'; result.className='verdict-result fail'; icon.textContent='✕'; fill.className='conf-fill fail'; }
+      const cp=Math.round(conf*100);
+      document.getElementById('confPct').textContent=cp+'%'; fill.style.width=cp+'%';
+      document.getElementById('passPct').textContent=Math.round(passProb*100)+'%';
+      document.getElementById('failPct').textContent=Math.round(failProb*100)+'%';
+      setTimeout(()=>{ document.getElementById('passBar').style.width=Math.round(passProb*100)+'%'; document.getElementById('failBar').style.width=Math.round(failProb*100)+'%'; },100);
+      document.getElementById('resetBtn').style.display='block';
+      analyzeBtn.disabled=false; document.getElementById('analyzeBtnText').textContent='Analyze Again';
+    } catch(err) {
       document.getElementById('analyzingOverlay').classList.remove('active');
-      const errEl = document.getElementById('errorMsg');
-      errEl.textContent = 'CLASSIFICATION ERROR: ' + err.message;
-      errEl.classList.add('visible');
-      analyzeBtn.disabled = false;
-      document.getElementById('analyzeBtnText').textContent = 'Retry';
-      console.error(err);
+      const e=document.getElementById('errorMsg'); e.textContent='ERROR: '+err.message; e.classList.add('visible');
+      analyzeBtn.disabled=false; document.getElementById('analyzeBtnText').textContent='Retry';
     }
   });
 
-  // ── Reset ──────────────────────────────────────────────────
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    previewImg.classList.remove('visible');
-    previewImg.src = '';
-    fileInput.value = '';
-    imageLoaded = false;
-    document.getElementById('idleState').style.display = '';
+  // Reset
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    previewImg.classList.remove('visible'); previewImg.src=''; fileInput.value=''; imageLoaded=false;
+    document.getElementById('idleState').style.display='';
     document.getElementById('verdictArea').classList.remove('visible');
     document.getElementById('errorMsg').classList.remove('visible');
-    document.getElementById('resetBtn').style.display = 'none';
-    analyzeBtn.disabled = true;
-    document.getElementById('analyzeBtnText').textContent = 'Load an image to analyze';
-    document.getElementById('passBar').style.width = '0%';
-    document.getElementById('failBar').style.width = '0%';
-    document.getElementById('confFill').style.width = '0%';
+    document.getElementById('resetBtn').style.display='none';
+    analyzeBtn.disabled=true; document.getElementById('analyzeBtnText').textContent='Load an image to analyze';
+    document.getElementById('passBar').style.width='0%';
+    document.getElementById('failBar').style.width='0%';
+    document.getElementById('confFill').style.width='0%';
   });
 
-  // ── Init ───────────────────────────────────────────────────
   loadModel();
 </script>
 </body>
