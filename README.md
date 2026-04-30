@@ -31,6 +31,7 @@ GelSight weld surface images organized into three original classes:
 4. View the Pass/Fail verdict with confidence score
 
 ## 📁 Repository Structure
+
 ├── index.html              # Full web application
 ├── model.json              # TensorFlow.js model architecture
 ├── group1-shard1of12.bin   # Model weights (12 shards)
