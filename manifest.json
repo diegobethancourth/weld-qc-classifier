@@ -2,25 +2,17 @@
   "name": "Weld QC Classifier – ASU MFG 598",
   "short_name": "Weld QC",
   "description": "AI-powered weld quality classifier. Upload a weld image and get instant Pass/Fail results.",
-  "start_url": "./",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0a0306",
+  "background_color": "#ffffff",
   "theme_color": "#8C1D40",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ],
-  "categories": ["productivity", "utilities"],
-  "screenshots": []
+  "categories": ["productivity", "utilities"]
 }

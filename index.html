@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Weld QC">
 <meta name="description" content="AI-powered weld quality classifier – ASU MFG 598">
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./ASU LOGO/ASU LOGO.png">
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
 <title>Weld QC Classifier – ASU MFG 598</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <!-- ASU uses Source Sans Pro / similar Google Font -->
@@ -482,7 +483,7 @@
             </svg>
           </div>
           <div class="upload-title">Drop weld image here</div>
-          <div class="upload-sub">or tap anywhere to browse · JPG PNG BMP</div>
+          <div class="upload-sub">Tap to choose from gallery or camera · JPG PNG BMP</div>
         </div>
         <div class="error-msg" id="errorMsg"></div>
       </div>
@@ -548,7 +549,7 @@
 
   <!-- Stats bar -->
   <div class="stats-bar">
-    <div class="stat"><div class="stat-label">Architecture</div><div class="stat-value">CNN</div></div>
+    <div class="stat"><div class="stat-label">Architecture</div><div class="stat-value" style="font-size:15px;line-height:1.2">Convolutional<br>Neural Network</div></div>
     <div class="stat"><div class="stat-label">Input Resolution</div><div class="stat-value">224×224</div></div>
     <div class="stat"><div class="stat-label">Model Accuracy</div><div class="stat-value gold">97%</div></div>
     <div class="stat"><div class="stat-label">Classes</div><div class="stat-value">Pass / Fail</div></div>
