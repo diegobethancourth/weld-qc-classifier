@@ -32,11 +32,13 @@ GelSight weld surface images organized into three original classes:
 
 ## 📁 Repository Structure
 
-├── index.html              # Full web application
-├── model.json              # TensorFlow.js model architecture
-├── group1-shard1of12.bin   # Model weights (12 shards)
-├── ...
-└── group1-shard12of12.bin
+── index.html              # Full web application
+── model.json              # TensorFlow.js model architecture
+── group1-shard1of12.bin   # Model weights (12 shards)
+.
+.
+.
+── group1-shard12of12.bin
 
 ## 📚 Course
 MFG 598 · Arizona State University · Spring 2026 · Diego Bethancourth M.S. Manufacturing Engineering Candidate
