@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weld QC Classifier</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 
@@ -734,7 +734,7 @@
       status.textContent = 'LOADING WEIGHTS...';
 
       // Load from same directory as HTML — model files must be co-located
-      model = await tf.loadLayersModel('./model.json');
+      model = await tf.loadLayersModel('./model.json', {strict: false});
 
       clearInterval(interval);
       bar.style.width = '100%';
