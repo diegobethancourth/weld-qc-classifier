@@ -7,9 +7,9 @@ Upload a GelSight weld surface image and get an instant **Pass / Fail** result �
 👉 [Open Weld QC Classifier](https://diegobethancourth.github.io/weld-qc-classifier/)
 
 ## 📌 About
-This project was developed as part of **MFG 598 – Manufacturing System Operations in Industry 4.0** at Arizona State University.
+This project was developed as part of **MFG 598 – Industrial Radiography Testing** at Arizona State University.
 
-**Authors:** Diego Bethancourth & Xavier Hebol D Cruze
+**Authors:** Diego Bethancourth & Xavier Hebol D Cruze | (Quote Credits)
 
 ## 🧠 Model
 - Architecture: Convolutional Neural Network (CNN)
