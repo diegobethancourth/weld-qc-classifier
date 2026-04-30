@@ -14,139 +14,219 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
   :root {
-    --asu-maroon:#8C1D40;--asu-dark:#6b1530;--asu-light:rgba(140,29,64,0.15);
-    --asu-gold:#FFC627;--asu-gold-dim:rgba(255,198,39,0.12);
-    --bg:#0a0306;--surface:#110408;--border:#2a0e1a;
-    --text:#f0e8eb;--text-dim:#7a5060;
-    --pass:#00d48a;--fail:#ff3b5c;
-    --mono:'Share Tech Mono',monospace;--display:'Barlow Condensed',sans-serif;
+    --asu-maroon: #8C1D40;
+    --asu-dark:   #6b1530;
+    --asu-light:  rgba(140,29,64,0.08);
+    --asu-gold:   #FFC627;
+    --asu-gold-dim: rgba(255,198,39,0.12);
+    /* Lighter background palette */
+    --bg:      #1c1217;
+    --surface: #251820;
+    --surface2:#2e1f28;
+    --border:  #3d2535;
+    --text:    #f5eef2;
+    --text-dim:#9a7a8a;
+    --pass:    #00c97a;
+    --fail:    #ff4060;
+    --mono:   'Share Tech Mono', monospace;
+    --display:'Barlow Condensed', sans-serif;
   }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;min-height:100dvh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(140,29,64,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(140,29,64,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+  body { background:var(--bg); color:var(--text); font-family:var(--display); min-height:100vh; min-height:100dvh; overflow-x:hidden }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(140,29,64,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(140,29,64,0.05) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0 }
 
-  /* Top stripe */
-  .topbar{height:5px;background:linear-gradient(90deg,var(--asu-maroon) 60%,var(--asu-gold) 100%)}
+  .topbar { height:5px; background:linear-gradient(90deg,var(--asu-maroon) 60%,var(--asu-gold) 100%) }
 
   /* Header */
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
-  .logo-area{display:flex;align-items:center;gap:14px}
-  .asu-logo{height:42px;width:auto;object-fit:contain}
-  .title-stack h1{font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:-.5px;line-height:1;text-transform:uppercase}
-  .title-stack h1 span{color:var(--asu-gold)}
-  .title-stack p{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px;letter-spacing:2px;text-transform:uppercase}
-  .model-badge{font-family:var(--mono);font-size:9px;color:var(--asu-gold);border:1px solid rgba(255,198,39,0.25);padding:5px 10px;background:var(--asu-gold-dim);display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-  .status-row{display:flex;align-items:center;gap:5px}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);flex-shrink:0}
-  .dot.loading{background:var(--asu-gold);animation:pulse 1s infinite}
-  .dot.ready{background:var(--pass)}
-  .dot.error{background:var(--fail)}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; backdrop-filter:blur(12px) }
+  .logo-area { display:flex; align-items:center; gap:14px }
+  .asu-logo { height:42px; width:auto; object-fit:contain }
+  .title-stack h1 { font-family:var(--display); font-weight:900; font-size:24px; letter-spacing:-.5px; line-height:1; text-transform:uppercase; color:var(--text) }
+  .title-stack h1 span { color:var(--asu-gold) }
+  .title-stack p { font-family:var(--mono); font-size:8px; color:var(--text-dim); margin-top:3px; letter-spacing:2px; text-transform:uppercase }
+  .model-badge { font-family:var(--mono); font-size:9px; color:var(--asu-gold); border:1px solid rgba(255,198,39,0.3); padding:6px 12px; background:var(--asu-gold-dim); display:flex; flex-direction:column; align-items:flex-end; gap:3px }
+  .status-row { display:flex; align-items:center; gap:5px }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); flex-shrink:0 }
+  .dot.loading { background:var(--asu-gold); animation:pulse 1s infinite }
+  .dot.ready   { background:var(--pass) }
+  .dot.error   { background:var(--fail) }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  /* Install banner */
-  .install-banner{background:linear-gradient(135deg,var(--asu-maroon),var(--asu-dark));border-bottom:1px solid rgba(255,198,39,.2);padding:10px 20px;display:none;align-items:center;justify-content:space-between;gap:10px}
-  .install-banner.visible{display:flex}
-  .install-text{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:1px;color:var(--text)}
-  .install-btn{background:var(--asu-gold);color:var(--asu-dark);border:none;padding:8px 18px;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity .2s;flex-shrink:0}
-  .install-btn:hover{opacity:.85}
-  .install-dismiss{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:0 4px}
+  /* PWA Install — always shown as a button in header on mobile */
+  .install-wrap { display:none }
+  .install-wrap.visible { display:block }
+  .install-header-btn {
+    background: var(--asu-gold);
+    color: var(--asu-dark);
+    border: none;
+    padding: 8px 14px;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  .install-header-btn:hover { opacity:.85 }
+
+  /* Manual install instructions banner (fallback for iOS/desktop) */
+  .manual-install {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .manual-install.visible { display:flex }
+  .manual-text { font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:1px }
+  .manual-text strong { color:var(--asu-gold) }
+  .manual-dismiss { background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:0 4px }
 
   /* Layout */
-  .container{max-width:920px;margin:0 auto;padding:24px 18px 80px;position:relative;z-index:1}
-  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-  @media(max-width:620px){.main-grid{grid-template-columns:1fr}}
+  .container { max-width:920px; margin:0 auto; padding:24px 18px 80px; position:relative; z-index:1 }
+  .main-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px }
+  @media(max-width:620px) { .main-grid { grid-template-columns:1fr } }
 
   /* Panels */
-  .panel{background:var(--surface);border:1px solid var(--border);padding:18px;position:relative}
-  .panel-label{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  .panel-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  .panel { background:var(--surface); border:1px solid var(--border); padding:20px; position:relative }
+  .panel-label { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px }
+  .panel-label::after { content:''; flex:1; height:1px; background:var(--border) }
 
-  /* Upload */
-  .upload-zone{border:1px dashed var(--border);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;background:rgba(140,29,64,.03)}
-  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--asu-maroon);background:var(--asu-light)}
-  .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
-  .upload-icon{width:40px;height:40px;margin-bottom:12px;opacity:.18}
-  .upload-text{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);text-align:center}
-  .upload-sub{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:4px;opacity:.5;text-align:center}
-  .preview-img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none}
-  .preview-img.visible{display:block}
+  /* Upload zone — input covers entire area including icon */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+    background: rgba(140,29,64,.04);
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--asu-maroon);
+    background: var(--asu-light);
+  }
+  /* Input covers the ENTIRE zone — pointer-events on everything */
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+    z-index: 10; /* sits above icon and text */
+  }
+  /* Icon and text sit below the invisible input */
+  .upload-icon { width:48px; height:48px; margin-bottom:14px; opacity:.3; pointer-events:none; position:relative; z-index:1 }
+  .upload-text { font-family:var(--display); font-weight:600; font-size:14px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); text-align:center; pointer-events:none; position:relative; z-index:1 }
+  .upload-sub { font-family:var(--mono); font-size:9px; color:var(--text-dim); margin-top:5px; opacity:.6; text-align:center; pointer-events:none; position:relative; z-index:1 }
+  .preview-img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; display:none; z-index:2 }
+  .preview-img.visible { display:block }
+  /* When image shown, hide the file input so user doesn't accidentally re-open */
+  .upload-zone.has-image input { pointer-events:none }
 
   /* Result */
-  .result-panel{display:flex;flex-direction:column}
-  .verdict-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 0;position:relative;min-height:180px}
-  .verdict-idle{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;text-align:center}
-  .verdict-idle svg{display:block;margin:0 auto 12px;opacity:.1}
-  .verdict{display:none;flex-direction:column;align-items:center;width:100%}
-  .verdict.visible{display:flex;animation:fadeInUp .4s ease}
-  @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .verdict-label{font-family:var(--mono);font-size:8px;letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;color:var(--text-dim)}
-  .verdict-result{font-family:var(--display);font-weight:900;font-size:76px;line-height:1;letter-spacing:-2px;text-transform:uppercase}
-  .verdict-result.pass{color:var(--pass)}
-  .verdict-result.fail{color:var(--fail)}
-  .verdict-icon{font-size:36px;margin-bottom:4px}
-  .confidence-section{margin-top:16px;width:100%}
-  .conf-label{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;display:flex;justify-content:space-between}
-  .conf-track{height:3px;background:var(--border);overflow:hidden}
-  .conf-fill{height:100%;width:0%;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
-  .conf-fill.pass{background:var(--pass)}.conf-fill.fail{background:var(--fail)}
-  .prob-section{margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px}
-  .prob-row{display:flex;align-items:center;gap:8px}
-  .prob-name{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;width:30px;text-transform:uppercase}
-  .prob-bar-track{flex:1;height:3px;background:var(--border);overflow:hidden}
-  .prob-bar-fill{height:100%;width:0%;transition:width .6s ease .2s}
-  .prob-bar-fill.pass{background:var(--pass)}.prob-bar-fill.fail{background:var(--fail)}
-  .prob-pct{font-family:var(--mono);font-size:8px;color:var(--text-dim);width:28px;text-align:right}
+  .result-panel { display:flex; flex-direction:column }
+  .verdict-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 0; position:relative; min-height:200px }
+  .verdict-idle { font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:2px; text-align:center }
+  .verdict-idle svg { display:block; margin:0 auto 12px; opacity:.15 }
+  .verdict { display:none; flex-direction:column; align-items:center; width:100% }
+  .verdict.visible { display:flex; animation:fadeInUp .4s ease }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .verdict-label { font-family:var(--mono); font-size:8px; letter-spacing:4px; text-transform:uppercase; margin-bottom:4px; color:var(--text-dim) }
+  .verdict-result { font-family:var(--display); font-weight:900; font-size:80px; line-height:1; letter-spacing:-2px; text-transform:uppercase }
+  .verdict-result.pass { color:var(--pass) }
+  .verdict-result.fail { color:var(--fail) }
+  .verdict-icon { font-size:36px; margin-bottom:2px }
+  .confidence-section { margin-top:16px; width:100% }
+  .conf-label { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:2px; margin-bottom:5px; display:flex; justify-content:space-between }
+  .conf-track { height:4px; background:var(--border); overflow:hidden; border-radius:2px }
+  .conf-fill { height:100%; width:0%; transition:width .6s cubic-bezier(.34,1.56,.64,1); border-radius:2px }
+  .conf-fill.pass { background:var(--pass) }
+  .conf-fill.fail { background:var(--fail) }
+  .prob-section { margin-top:14px; width:100%; display:flex; flex-direction:column; gap:8px }
+  .prob-row { display:flex; align-items:center; gap:8px }
+  .prob-name { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:1px; width:32px; text-transform:uppercase }
+  .prob-bar-track { flex:1; height:4px; background:var(--border); overflow:hidden; border-radius:2px }
+  .prob-bar-fill { height:100%; width:0%; transition:width .6s ease .2s; border-radius:2px }
+  .prob-bar-fill.pass { background:var(--pass) }
+  .prob-bar-fill.fail { background:var(--fail) }
+  .prob-pct { font-family:var(--mono); font-size:9px; color:var(--text); width:30px; text-align:right; font-weight:bold }
 
   /* Buttons */
-  .btn-group{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-  .analyze-btn{width:100%;padding:18px;background:transparent;border:1px solid var(--asu-maroon);color:var(--text);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;-webkit-appearance:none}
-  .analyze-btn::before{content:'';position:absolute;inset:0;background:var(--asu-maroon);transform:translateX(-100%);transition:transform .3s ease;z-index:0}
-  .analyze-btn:not(:disabled):hover::before{transform:translateX(0)}
-  .analyze-btn span{position:relative;z-index:1}
-  .analyze-btn:disabled{opacity:.3;cursor:not-allowed;border-color:var(--text-dim)}
-  .analyze-btn:disabled::before{display:none}
+  .btn-group { display:flex; flex-direction:column; gap:10px; margin-top:16px }
+  .analyze-btn {
+    width:100%; padding:18px;
+    background:transparent;
+    border:2px solid var(--asu-maroon);
+    color:var(--text);
+    font-family:var(--display); font-weight:700; font-size:16px; letter-spacing:4px; text-transform:uppercase;
+    cursor:pointer; transition:all .2s; position:relative; overflow:hidden; -webkit-appearance:none;
+  }
+  .analyze-btn::before { content:''; position:absolute; inset:0; background:var(--asu-maroon); transform:translateX(-100%); transition:transform .3s ease; z-index:0 }
+  .analyze-btn:not(:disabled):hover::before { transform:translateX(0) }
+  .analyze-btn span { position:relative; z-index:1 }
+  .analyze-btn:disabled { opacity:.35; cursor:not-allowed; border-color:var(--text-dim) }
+  .analyze-btn:disabled::before { display:none }
 
-  /* BIG reset */
-  .reset-btn{width:100%;padding:16px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:none;-webkit-appearance:none}
-  .reset-btn:hover{border-color:var(--asu-gold);color:var(--asu-gold)}
+  /* Big reset button */
+  .reset-btn {
+    width:100%; padding:16px;
+    background:transparent;
+    border:2px solid var(--border);
+    color:var(--text-dim);
+    font-family:var(--display); font-weight:700; font-size:16px; letter-spacing:3px; text-transform:uppercase;
+    cursor:pointer; transition:all .2s; display:none; -webkit-appearance:none;
+  }
+  .reset-btn:hover { border-color:var(--asu-gold); color:var(--asu-gold) }
 
   /* Analyzing */
-  .analyzing-overlay{position:absolute;inset:0;background:var(--surface);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:10}
-  .analyzing-overlay.active{display:flex}
-  .scan-line{width:60px;height:2px;background:var(--asu-gold);animation:scan 1.2s ease-in-out infinite alternate;box-shadow:0 0 10px var(--asu-gold)}
-  @keyframes scan{from{transform:translateX(-40px);opacity:.4}to{transform:translateX(40px);opacity:1}}
-  .analyzing-text{font-family:var(--mono);font-size:10px;color:var(--asu-gold);letter-spacing:3px;animation:blink 1s infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+  .analyzing-overlay { position:absolute; inset:0; background:var(--surface); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; z-index:10 }
+  .analyzing-overlay.active { display:flex }
+  .scan-line { width:60px; height:2px; background:var(--asu-gold); animation:scan 1.2s ease-in-out infinite alternate; box-shadow:0 0 10px var(--asu-gold) }
+  @keyframes scan { from{transform:translateX(-40px);opacity:.4} to{transform:translateX(40px);opacity:1} }
+  .analyzing-text { font-family:var(--mono); font-size:10px; color:var(--asu-gold); letter-spacing:3px; animation:blink 1s infinite }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 
   /* Info bar */
-  .info-panel{background:var(--surface);border:1px solid var(--border);padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-  @media(max-width:480px){.info-panel{grid-template-columns:repeat(2,1fr)}}
-  .info-item{display:flex;flex-direction:column;gap:2px}
-  .info-key{font-family:var(--mono);font-size:7px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
-  .info-val{font-family:var(--display);font-weight:700;font-size:19px;color:var(--text);letter-spacing:-.5px}
-  .info-val.gold{color:var(--asu-gold)}
+  .info-panel { background:var(--surface); border:1px solid var(--border); padding:18px 22px; display:grid; grid-template-columns:repeat(4,1fr); gap:16px }
+  @media(max-width:480px) { .info-panel { grid-template-columns:repeat(2,1fr) } }
+  .info-item { display:flex; flex-direction:column; gap:3px }
+  .info-key { font-family:var(--mono); font-size:7px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase }
+  .info-val { font-family:var(--display); font-weight:700; font-size:20px; color:var(--text); letter-spacing:-.5px }
+  .info-val.gold { color:var(--asu-gold) }
 
   /* Error */
-  .error-msg{font-family:var(--mono);font-size:9px;color:var(--fail);padding:9px;border:1px solid rgba(255,59,92,.3);background:rgba(255,59,92,.05);display:none;margin-top:8px;letter-spacing:1px}
-  .error-msg.visible{display:block}
+  .error-msg { font-family:var(--mono); font-size:9px; color:var(--fail); padding:10px; border:1px solid rgba(255,64,96,.3); background:rgba(255,64,96,.07); display:none; margin-top:10px; letter-spacing:1px }
+  .error-msg.visible { display:block }
 
   /* Loading screen */
-  .loading-model{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;z-index:100;transition:opacity .5s ease}
-  .loading-model.hidden{opacity:0;pointer-events:none}
-  .loading-logo{height:54px;object-fit:contain;margin-bottom:4px}
-  .loading-title{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:-1px;text-transform:uppercase;text-align:center}
-  .loading-title span{color:var(--asu-gold)}
-  .loading-bar-track{width:240px;height:2px;background:var(--border)}
-  .loading-bar-fill{height:100%;background:var(--asu-maroon);width:0%;transition:width .3s ease;box-shadow:0 0 8px var(--asu-maroon)}
-  .loading-sub{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:2px}
+  .loading-model { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; z-index:100; transition:opacity .5s ease }
+  .loading-model.hidden { opacity:0; pointer-events:none }
+  .loading-logo { height:56px; object-fit:contain; margin-bottom:4px }
+  .loading-title { font-family:var(--display); font-weight:900; font-size:28px; letter-spacing:-1px; text-transform:uppercase; text-align:center; color:var(--text) }
+  .loading-title span { color:var(--asu-gold) }
+  .loading-bar-track { width:240px; height:3px; background:var(--border); border-radius:2px }
+  .loading-bar-fill { height:100%; background:var(--asu-maroon); width:0%; transition:width .3s ease; box-shadow:0 0 8px var(--asu-maroon); border-radius:2px }
+  .loading-sub { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:2px }
 
   /* Footer */
-  footer{text-align:center;padding:14px;font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:2px;border-top:1px solid var(--border);margin-top:16px}
-  footer span{color:var(--asu-maroon)}
+  footer { text-align:center; padding:14px; font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:2px; border-top:1px solid var(--border); margin-top:16px }
+  footer span { color:var(--asu-maroon) }
 </style>
 </head>
 <body>
 
+<!-- Loading screen -->
 <div class="loading-model" id="loadingScreen">
   <img class="loading-logo" src="./ASU LOGO/ASU LOGO.png" alt="ASU" onerror="this.style.display='none'">
   <div class="loading-title">Loading <span>Model</span></div>
@@ -154,10 +234,13 @@
   <div class="loading-sub" id="loadingStatus">INITIALIZING...</div>
 </div>
 
-<div class="install-banner" id="installBanner">
-  <div class="install-text">📱 Install Weld QC as an app on your device</div>
-  <button class="install-btn" id="installBtn">Install</button>
-  <button class="install-dismiss" id="installDismiss">✕</button>
+<!-- Manual install instructions (iOS / desktop fallback) -->
+<div class="manual-install" id="manualInstall">
+  <div class="manual-text">
+    📱 <strong>iOS:</strong> Tap Share → "Add to Home Screen" &nbsp;|&nbsp;
+    💻 <strong>Desktop:</strong> Click ⊕ in the address bar
+  </div>
+  <button class="manual-dismiss" id="manualDismiss">✕</button>
 </div>
 
 <div class="topbar"></div>
@@ -170,20 +253,28 @@
       <p>MFG 598 · Weld Image Classification · ASU</p>
     </div>
   </div>
-  <div class="model-badge">
-    <div>CNN 224×224 · Binary Classifier</div>
-    <div class="status-row">
-      <div class="dot loading" id="statusDot"></div>
-      <span id="statusText">LOADING MODEL</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="install-wrap" id="installWrap">
+      <button class="install-header-btn" id="installBtn">⬇ Install App</button>
+    </div>
+    <div class="model-badge">
+      <div>CNN 224×224 · Binary Classifier</div>
+      <div class="status-row">
+        <div class="dot loading" id="statusDot"></div>
+        <span id="statusText">LOADING MODEL</span>
+      </div>
     </div>
   </div>
 </header>
 
 <div class="container">
   <div class="main-grid">
+
+    <!-- Upload panel -->
     <div class="panel">
       <div class="panel-label">Input Image</div>
       <div class="upload-zone" id="uploadZone">
+        <!-- Input is z-index:10, covers entire zone including icon -->
         <input type="file" id="fileInput" accept="image/*">
         <img class="preview-img" id="previewImg" alt="Preview">
         <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -192,11 +283,12 @@
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
         <div class="upload-text">Drop weld image here</div>
-        <div class="upload-sub">or tap to browse · JPG PNG BMP</div>
+        <div class="upload-sub">or tap anywhere to browse · JPG PNG BMP</div>
       </div>
       <div class="error-msg" id="errorMsg"></div>
     </div>
 
+    <!-- Result panel -->
     <div class="panel result-panel">
       <div class="panel-label">Classification Result</div>
       <div class="verdict-area">
@@ -205,7 +297,7 @@
           <div class="analyzing-text">ANALYZING...</div>
         </div>
         <div class="verdict-idle" id="idleState">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           AWAITING IMAGE
@@ -236,7 +328,7 @@
         <button class="analyze-btn" id="analyzeBtn" disabled>
           <span id="analyzeBtnText">Load an image to analyze</span>
         </button>
-        <button class="reset-btn" id="resetBtn">↺ Reset</button>
+        <button class="reset-btn" id="resetBtn">↺ &nbsp;Reset</button>
       </div>
     </div>
   </div>
@@ -254,118 +346,184 @@
 </div>
 
 <script>
-  // PWA
+  // ── PWA Service Worker ──────────────────────────────────────
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+  // ── PWA Install ─────────────────────────────────────────────
   let deferredPrompt = null;
+
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    document.getElementById('installBanner').classList.add('visible');
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installWrap').classList.add('visible');
+    // Hide manual instructions if native prompt available
+    document.getElementById('manualInstall').classList.remove('visible');
   });
+
   document.getElementById('installBtn').addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    document.getElementById('installBanner').classList.remove('visible');
+    document.getElementById('installWrap').classList.remove('visible');
   });
-  document.getElementById('installDismiss').addEventListener('click', () =>
-    document.getElementById('installBanner').classList.remove('visible'));
-  window.addEventListener('appinstalled', () =>
-    document.getElementById('installBanner').classList.remove('visible'));
 
-  // Model
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('installWrap').classList.remove('visible');
+    document.getElementById('manualInstall').classList.remove('visible');
+  });
+
+  // Show manual install instructions if not already installed (iOS / non-Chrome)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+  if (!isStandalone) {
+    // Show manual tip after a short delay (don't show immediately — wait to see if beforeinstallprompt fires)
+    setTimeout(() => {
+      if (!deferredPrompt) {
+        document.getElementById('manualInstall').classList.add('visible');
+      }
+    }, 3000);
+  }
+
+  document.getElementById('manualDismiss').addEventListener('click', () =>
+    document.getElementById('manualInstall').classList.remove('visible'));
+
+  // ── Model Loading ───────────────────────────────────────────
   let model = null, imageLoaded = false;
+
   async function loadModel() {
-    const bar = document.getElementById('loadingBar');
+    const bar    = document.getElementById('loadingBar');
     const status = document.getElementById('loadingStatus');
     let p = 0;
     const iv = setInterval(() => { p = Math.min(p + Math.random()*7, 85); bar.style.width = p+'%'; }, 200);
     try {
       status.textContent = 'LOADING WEIGHTS...';
       model = await tf.loadLayersModel('./model.json');
-      clearInterval(iv); bar.style.width='100%'; bar.style.background='var(--pass)';
-      status.textContent='MODEL READY';
+      clearInterval(iv);
+      bar.style.width = '100%';
+      bar.style.background = 'var(--pass)';
+      status.textContent = 'MODEL READY';
       setTimeout(() => {
         document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('statusDot').className='dot ready';
-        document.getElementById('statusText').textContent='MODEL READY';
+        document.getElementById('statusDot').className = 'dot ready';
+        document.getElementById('statusText').textContent = 'MODEL READY';
       }, 500);
     } catch(err) {
-      clearInterval(iv); bar.style.background='var(--fail)';
-      status.textContent='ERROR: '+err.message;
-      document.getElementById('statusDot').className='dot error';
-      document.getElementById('statusText').textContent='LOAD FAILED';
+      clearInterval(iv);
+      bar.style.background = 'var(--fail)';
+      status.textContent = 'ERROR: ' + err.message;
+      document.getElementById('statusDot').className = 'dot error';
+      document.getElementById('statusText').textContent = 'LOAD FAILED';
     }
   }
 
-  // Upload
-  const fileInput=document.getElementById('fileInput');
-  const uploadZone=document.getElementById('uploadZone');
-  const previewImg=document.getElementById('previewImg');
-  const analyzeBtn=document.getElementById('analyzeBtn');
+  // ── File Upload ─────────────────────────────────────────────
+  const fileInput  = document.getElementById('fileInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const previewImg = document.getElementById('previewImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
 
-  fileInput.addEventListener('change',(e)=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
-  uploadZone.addEventListener('dragover',(e)=>{ e.preventDefault(); uploadZone.classList.add('drag-over'); });
-  uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop',(e)=>{ e.preventDefault(); uploadZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')) handleFile(f); });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) handleFile(f);
+  });
 
   function handleFile(file) {
-    const reader=new FileReader();
-    reader.onload=(e)=>{
-      previewImg.src=e.target.result; previewImg.classList.add('visible'); imageLoaded=true;
-      document.getElementById('idleState').style.display='none';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      previewImg.classList.add('visible');
+      uploadZone.classList.add('has-image');
+      imageLoaded = true;
+      document.getElementById('idleState').style.display = 'none';
       document.getElementById('verdictArea').classList.remove('visible');
       document.getElementById('errorMsg').classList.remove('visible');
-      document.getElementById('resetBtn').style.display='none';
-      analyzeBtn.disabled=!model;
-      document.getElementById('analyzeBtnText').textContent='Analyze Weld';
+      document.getElementById('resetBtn').style.display = 'none';
+      analyzeBtn.disabled = !model;
+      document.getElementById('analyzeBtnText').textContent = 'Analyze Weld';
     };
     reader.readAsDataURL(file);
   }
 
-  // Classify
+  // ── Classify ────────────────────────────────────────────────
   analyzeBtn.addEventListener('click', async () => {
-    if (!model||!imageLoaded) return;
-    analyzeBtn.disabled=true;
+    if (!model || !imageLoaded) return;
+    analyzeBtn.disabled = true;
     document.getElementById('analyzingOverlay').classList.add('active');
     document.getElementById('verdictArea').classList.remove('visible');
-    await new Promise(r=>setTimeout(r,800));
+    await new Promise(r => setTimeout(r, 800));
     try {
-      const tensor=tf.browser.fromPixels(previewImg,1).resizeBilinear([224,224]).toFloat().div(255.0).expandDims(0);
-      const pred=await model.predict(tensor).data(); tensor.dispose();
-      const failProb=pred[0], passProb=1-failProb, isPass=failProb<0.5, conf=isPass?passProb:failProb;
+      const tensor = tf.browser.fromPixels(previewImg, 1)
+        .resizeBilinear([224, 224]).toFloat().div(255.0).expandDims(0);
+      const pred = await model.predict(tensor).data();
+      tensor.dispose();
+      const failProb = pred[0], passProb = 1 - failProb;
+      const isPass = failProb < 0.5;
+      const conf = isPass ? passProb : failProb;
+
       document.getElementById('analyzingOverlay').classList.remove('active');
       document.getElementById('verdictArea').classList.add('visible');
-      const result=document.getElementById('verdictResult');
-      const icon=document.getElementById('verdictIcon');
-      const fill=document.getElementById('confFill');
-      if (isPass) { result.textContent='PASS'; result.className='verdict-result pass'; icon.textContent='✓'; fill.className='conf-fill pass'; }
-      else { result.textContent='FAIL'; result.className='verdict-result fail'; icon.textContent='✕'; fill.className='conf-fill fail'; }
-      const cp=Math.round(conf*100);
-      document.getElementById('confPct').textContent=cp+'%'; fill.style.width=cp+'%';
-      document.getElementById('passPct').textContent=Math.round(passProb*100)+'%';
-      document.getElementById('failPct').textContent=Math.round(failProb*100)+'%';
-      setTimeout(()=>{ document.getElementById('passBar').style.width=Math.round(passProb*100)+'%'; document.getElementById('failBar').style.width=Math.round(failProb*100)+'%'; },100);
-      document.getElementById('resetBtn').style.display='block';
-      analyzeBtn.disabled=false; document.getElementById('analyzeBtnText').textContent='Analyze Again';
+
+      const result = document.getElementById('verdictResult');
+      const icon   = document.getElementById('verdictIcon');
+      const fill   = document.getElementById('confFill');
+
+      if (isPass) {
+        result.textContent = 'PASS'; result.className = 'verdict-result pass';
+        icon.textContent = '✓'; fill.className = 'conf-fill pass';
+      } else {
+        result.textContent = 'FAIL'; result.className = 'verdict-result fail';
+        icon.textContent = '✕'; fill.className = 'conf-fill fail';
+      }
+
+      const cp = Math.round(conf * 100);
+      document.getElementById('confPct').textContent = cp + '%';
+      fill.style.width = cp + '%';
+      document.getElementById('passPct').textContent = Math.round(passProb * 100) + '%';
+      document.getElementById('failPct').textContent = Math.round(failProb * 100) + '%';
+      setTimeout(() => {
+        document.getElementById('passBar').style.width = Math.round(passProb * 100) + '%';
+        document.getElementById('failBar').style.width = Math.round(failProb * 100) + '%';
+      }, 100);
+
+      document.getElementById('resetBtn').style.display = 'block';
+      analyzeBtn.disabled = false;
+      document.getElementById('analyzeBtnText').textContent = 'Analyze Again';
+
     } catch(err) {
       document.getElementById('analyzingOverlay').classList.remove('active');
-      const e=document.getElementById('errorMsg'); e.textContent='ERROR: '+err.message; e.classList.add('visible');
-      analyzeBtn.disabled=false; document.getElementById('analyzeBtnText').textContent='Retry';
+      const e = document.getElementById('errorMsg');
+      e.textContent = 'ERROR: ' + err.message;
+      e.classList.add('visible');
+      analyzeBtn.disabled = false;
+      document.getElementById('analyzeBtnText').textContent = 'Retry';
     }
   });
 
-  // Reset
-  document.getElementById('resetBtn').addEventListener('click',()=>{
-    previewImg.classList.remove('visible'); previewImg.src=''; fileInput.value=''; imageLoaded=false;
-    document.getElementById('idleState').style.display='';
+  // ── Reset ───────────────────────────────────────────────────
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    previewImg.classList.remove('visible');
+    previewImg.src = '';
+    fileInput.value = '';
+    imageLoaded = false;
+    uploadZone.classList.remove('has-image');
+    document.getElementById('idleState').style.display = '';
     document.getElementById('verdictArea').classList.remove('visible');
     document.getElementById('errorMsg').classList.remove('visible');
-    document.getElementById('resetBtn').style.display='none';
-    analyzeBtn.disabled=true; document.getElementById('analyzeBtnText').textContent='Load an image to analyze';
-    document.getElementById('passBar').style.width='0%';
-    document.getElementById('failBar').style.width='0%';
-    document.getElementById('confFill').style.width='0%';
+    document.getElementById('resetBtn').style.display = 'none';
+    analyzeBtn.disabled = true;
+    document.getElementById('analyzeBtnText').textContent = 'Load an image to analyze';
+    document.getElementById('passBar').style.width = '0%';
+    document.getElementById('failBar').style.width = '0%';
+    document.getElementById('confFill').style.width = '0%';
   });
 
   loadModel();
